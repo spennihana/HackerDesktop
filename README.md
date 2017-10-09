@@ -1,2 +1,1 @@
-# HNDesktop
-Hacker News Desktop
+# Hacker News Desktop App

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>HackerDesktop</title>
+
+  <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+  
+  <!-- JQuery -->
+  <script src="resources/jquery/jquery-3.1.1.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" type="text/css" href="./resources/font-awesome-4.6.3/css/font-awesome.min.css">
+
+  <!-- Materialize -->
+  <link rel="stylesheet" type="text/css" href="./resources/materialize/css/materialize.min.css">
+  <script src="./resources/materialize/js/materialize.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" type="text/css" href="./resources/css/custom.css">
+
+  <script>if (window.module) module = window.module;</script>
+  <style>
+    .style-elements .fa { font-family: FontAwesome }
+  </style>
+
+  <style type="text/css">
+    @font-face {
+      font-family: "MyLato";
+      src: url(./resources/fonts/Lato/Lato-Regular.ttf) format("truetype");
+    }
+    body {
+      font-family: MyLato;
+    }
+   </style>
+
+  <!-- tab icon -->
+<!--  <link rel="icon" href="favicon.ico"> -->
+
+</head>
+<body style="overflow:hidden;">
+  <div id="container"></div>
+  <script type="text/javascript" src="./elm.js"></script>
+  <script type="text/javascript">
+    var app = Elm.HackerDesktop.fullscreen();
+  </script>
+</body>
+</html>
