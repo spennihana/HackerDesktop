@@ -17,6 +17,7 @@ type Styles
   | DraggerInner
   | Header
   | StoriesHeader
+  | Items
   | Sidebar
   | SidebarButton SidebarButtonStyles
   | Refresh
@@ -73,4 +74,5 @@ appstyles =
         , Border.rounded 5
         , hover [Style.Color.text Color.white, Style.Color.background <| Color.rgba 115 210 22 0.60]
         ]
+    , style Items[]
     ]

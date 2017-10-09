@@ -16,7 +16,7 @@ main: Program Never HNDModel HNDMsg
 main = Html.program { init = init, update=update, view=view, subscriptions=subscriptions}
 
 init: (HNDModel, Cmd HNDMsg)
-init = AppModel.init ![]
+init = AppModel.init ! [Cmd.map StoriesMsg Widgets.Stories.loadContent]
 
 subscriptions: HNDModel -> Sub HNDMsg
 subscriptions model

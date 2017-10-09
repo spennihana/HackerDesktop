@@ -38,7 +38,7 @@ build/hnd.jar: $(main_classes)
 	@[ -d build ] || mkdir -p build
 	@jar -cf build/hnd.jar -C build/classes/main .
 
-init: web/package.json web/node_modules web/node_modules/zeromq web/node_modules/bytebuffer web/node_modules/long
+init: web/package.json web/node_modules
 
 package: clean init elm jars $(wildcard web/src/*js) 
 	@echo "building " $@ " because " $?
@@ -68,18 +68,8 @@ web/node_modules:
 	@mkdir tmpnm
 	@(cd tmpnm && electron-forge init && mv node_modules ../web/node_modules)
 	@rm -rf tmpnm
-
-web/node_modules/zeromq:
-	@echo "building zmq"
-	@(cd web && npm install zeromq/)
-
-web/node_modules/long:
-	@cd web && npm install long
-
-web/node_modules/bytebuffer:
-	@cd web && npm install bytebuffer
-
-
+	@(cd web && npm i --save winston)
+	@(cd web && npm i --save winston-electron)
 
 .PHONY: clean
 clean:
@@ -89,3 +79,4 @@ clean:
 	rm -rf dist
 	rm -rf tmpnm
 	rm -rf web/package.json
+	rm -rf web/src/resources/jars
