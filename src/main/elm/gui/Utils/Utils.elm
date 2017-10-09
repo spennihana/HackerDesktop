@@ -6,6 +6,9 @@ import Html.Events exposing (onWithOptions)
 import Json.Decode as JDecode
 import Window
 
+doTask: msg -> Cmd msg
+doTask m = Task.perform (\_ -> m) (Task.succeed always)
+
 type alias ClickOptions = { preventDefault : Bool, stopPropagation : Bool }
 clickOptionsTT : ClickOptions
 clickOptionsTT = {preventDefault=True, stopPropagation=True}

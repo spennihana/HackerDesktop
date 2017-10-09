@@ -6,7 +6,7 @@ import Html exposing (Html)
 import Element exposing (Element, column, text, el, empty, node, row)
 import Element.Attributes exposing (px, padding, height, fill, width, fill, vary,
                                     toAttr, verticalCenter, center, spacing, id,
-                                    percent, alignRight, moveDown, classList, class,
+                                    percent, alignRight, moveRight, classList, class,
                                     alignLeft, paddingXY, attribute
                                     )
 import Element.Events exposing (onWithOptions)
@@ -43,7 +43,7 @@ update msg widg
 
 view: CommentsWidget -> Element Styles v Msg
 view cwidg
-  = row None[width fill, height fill]
+  = row None[moveRight 2, width fill, height fill]
       [comments cwidg]
 
 comments: CommentsWidget -> Element Styles v Msg

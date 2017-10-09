@@ -21,11 +21,17 @@ class HackerDesktop(val port: Int, userDataPath: String) {
     _userData = userDataPath
     _endpoint = "*:" + port
     PID="-1L"
-    _server = RequestServer(port)
-    _server.boot()
     val n = ManagementFactory.getRuntimeMXBean().name
     val i = n.indexOf('@')
     if (i != -1) PID = java.lang.Long.parseLong(n.substring(0, i)).toString()
+
+
+
+
+
+    // init the rest server endpoints
+    _server = RequestServer(port)
+    _server.boot()
     Log.info("==========Hacker Desktop==========")
     Log.info("Internal server started at: " + _endpoint)
     Log.info("Log directory: " + _userData)

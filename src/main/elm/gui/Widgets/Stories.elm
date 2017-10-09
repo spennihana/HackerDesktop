@@ -14,8 +14,9 @@ import Element.Input
 import Json.Decode as JDecode
 import InfiniteScroll as IS
 import Http
+import Task
 -- user imports
-import Utils.Utils
+import Utils.Utils exposing (doTask)
 import Styles exposing (Styles(..))
 import Widgets.ResizeableWidget exposing (Widget, Resizer(..), Msg(..))
 import Json.Decode as Decode
@@ -48,6 +49,7 @@ type alias Stories
   = { stories: List Item
     , type_: StoryType
     , infScroll: IS.Model Msg
+    , page: Int -- pages are 30 items long
     }
 
 type Msg
@@ -57,6 +59,7 @@ type Msg
   | InfScrollMsg IS.Msg
   | OnScroll JDecode.Value
   | OnDataRetrieved (Result Http.Error (List String))
+  | LoadMore
 
 type alias StoriesWidget
   = Widgets.ResizeableWidget.Widget Stories
@@ -71,6 +74,7 @@ init =
     { stories=[]
     , type_=Top
     , infScroll= IS.startLoading infScroll
+    , page=0
     } LeftRight .x
 
 update: Msg -> StoriesWidget -> (StoriesWidget, Cmd Msg)
@@ -87,9 +91,10 @@ update msg widg
 
     ChangeStory story ->
       let
-        stories = {stories=[], type_=str2Type story, infScroll=swidget.infScroll}
+        stories = {stories=[], type_=str2Type story, infScroll=swidget.infScroll, page=0}
+        newwidg = {widg|widget=stories}
       in
-        {widg|widget=stories} ! [loadContent]
+        newwidg ! [loadContent newwidg]
 
     InfScrollMsg imsg ->
       let (infScroll, cmd) = IS.update InfScrollMsg imsg swidget.infScroll
@@ -107,23 +112,26 @@ update msg widg
     OnDataRetrieved (Ok result) ->
       let stories = List.concat [swidget.stories, List.map (\r -> {text=r}) result]
           infScroll = IS.stopLoading swidget.infScroll
-          newwidg = {swidget|stories=stories, infScroll=infScroll}
+          newwidg = {swidget|stories=stories, infScroll=infScroll, page= swidget.page+1}
       in
         {widg|widget=newwidg}![]
 
     OnScroll value -> widg![IS.cmdFromScrollEvent InfScrollMsg value]
 
+    LoadMore -> widg![loadContent widg]
+
 decoder: JDecode.Decoder (List String)
 decoder = JDecode.list JDecode.string
 
-loadContent : Cmd Msg
-loadContent =
-    Http.get "https://baconipsum.com/api/?type=all-meat&paras=30" decoder
-        |> Http.send OnDataRetrieved
+loadContent: StoriesWidget -> Cmd Msg
+loadContent s
+  = let url = "http://localhost:3984/" ++ (type2Str s) ++ "/" ++ (toString s.widget.page) in
+    Http.get url decoder
+      |> Http.send OnDataRetrieved
 
 loadMore : IS.Direction -> Cmd Msg
 loadMore dir
-  = loadContent
+  = doTask LoadMore
 
 str2Type: String -> StoryType
 str2Type s
