@@ -17,6 +17,7 @@ import Http
 import Task
 -- user imports
 import Utils.Utils exposing (doTask)
+import Utils.Decoders exposing (Item, decodeItem, viewItem)
 import Styles exposing (Styles(..))
 import Widgets.ResizeableWidget exposing (Widget, Resizer(..), Msg(..))
 import Json.Decode as Decode
@@ -24,24 +25,6 @@ import Json.Decode.Extra exposing ((|:))
 
 import Debug exposing (log)
 
-type alias Item = {text: String}
---type alias Item
---  = { id: Int
---    , deleted: Maybe Bool
---    , type_: Maybe String
---    , by: Maybe String
---    , time: Maybe Int
---    , text: Maybe String
---    , dead: Maybe Bool
---    , parent: Maybe Int
---    , poll: Maybe Int
---    , kids: List Int
---    , url: Maybe String
---    , score: Maybe Int
---    , title: Maybe String
---    , parts: List Int
---    , descendants: Maybe Int
---    }
 
 type StoryType = New|Top|Best|Ask|Show|Jobs
 
@@ -58,7 +41,8 @@ type Msg
   | ChangeStory String
   | InfScrollMsg IS.Msg
   | OnScroll JDecode.Value
-  | OnDataRetrieved (Result Http.Error (List String))
+  | OnUnderflow JDecode.Value
+  | OnDataRetrieved (Result Http.Error (List Item))
   | LoadMore
 
 type alias StoriesWidget
@@ -110,28 +94,38 @@ update msg widg
         {widg|widget=newwidg}![]
 
     OnDataRetrieved (Ok result) ->
-      let stories = List.concat [swidget.stories, List.map (\r -> {text=r}) result]
+      let stories = List.concat [swidget.stories, result]
           infScroll = IS.stopLoading swidget.infScroll
           newwidg = {swidget|stories=stories, infScroll=infScroll, page= swidget.page+1}
       in
         {widg|widget=newwidg}![]
 
     OnScroll value -> widg![IS.cmdFromScrollEvent InfScrollMsg value]
+    OnUnderflow value ->
+      let _= log "foo" "basdf" in
+      widg![]
 
     LoadMore -> widg![loadContent widg]
 
-decoder: JDecode.Decoder (List String)
-decoder = JDecode.list JDecode.string
+decoder: JDecode.Decoder (List Item)
+decoder = JDecode.list decodeItem
 
 loadContent: StoriesWidget -> Cmd Msg
 loadContent s
-  = let url = "http://localhost:3984/" ++ (type2Str s) ++ "/" ++ (toString s.widget.page) in
+  = let url = "http://localhost:3984/" ++ (String.toLower <| type2Str s) ++ "/" ++ (toString <| nToFetch s) in
     Http.get url decoder
       |> Http.send OnDataRetrieved
 
 loadMore : IS.Direction -> Cmd Msg
 loadMore dir
   = doTask LoadMore
+
+-- could do something more thoughtful here later...
+nToFetch: StoriesWidget -> Int
+nToFetch s
+  = case s.widget.page>0 of
+    True -> 5
+    False -> 50
 
 str2Type: String -> StoryType
 str2Type s
@@ -189,6 +183,7 @@ items swidg
       , width fill
       , yScrollbar
       , on "scroll" (JDecode.map OnScroll JDecode.value)
+      , on "underflow" (JDecode.map OnUnderflow JDecode.value)
       ]
       [ column None [height <| px 40, width fill]
           <| List.map (\s -> storyItem s) swidg.widget.stories
@@ -196,7 +191,7 @@ items swidg
 
 storyItem: Item -> Element Styles v Msg
 storyItem item
-  = el None[](text item.text)
+  = el None[](text <| toString item.id)
 
 dragger: StoriesWidget -> Element Styles v Widgets.ResizeableWidget.Msg
 dragger swidg

@@ -41,9 +41,44 @@ object HN {
 
 data class Item(val item:String, var sort:Int)
 class StoryCache(val story:String) {
+  companion object {
+    const val ITEMS_PER_PAGE = 30
+  }
+  init { fetchAll() }
   var _ids: IntArray? = null
-  fun getAll() {
-    val res = HN.hnRequest(HN.storiesURL(story))
+  var _fetchedSoFar:Int = 0
+  fun fetchAll() {
+//    val res = HN.hnRequest(HN.storiesURL(story))
+//    _ids = Gson().fromJson(res, IntArray::class.java)
+//    if( _ids==null )
+//      throw IllegalStateException("Unable to fetch $story stories")
   }
 
+  private fun range(index: IntArray?, start: Int, cnt: Int): IntArray? {
+    if( index==null ) return null
+    var start = start
+    var cnt = cnt
+    if( start < 0 || start > index.size )
+      return null
+    if( start + cnt > index.size )
+      cnt = index.size - start
+
+    val res = IntArray(cnt)
+    var i = 0
+    while (i < cnt) res[i++] = index[start++]
+    _fetchedSoFar += cnt
+    return res
+  }
+
+  val s = """{"by":"gsempe","descendants":23,"id":15424437,"kids":[15426103,15425772,15427111,15426279,15428238,15428066,15428070,15428900,15425971],"score":240,"time":1507394136,"title":"A Simple Approach to Building a Real-Time Collaborative Text Editor","type":"story","url":"http://digitalfreepen.com/2017/10/06/simple-real-time-collaborative-text-editor.html"}"""
+
+  fun loadMore(nToFetch:Int):String {
+    return "[$s]"
+//    val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return Gson().toJson(null)
+//    val stories = arrayOfNulls<String>(ids.size)
+//    var i=0
+//    for(id in ids)
+//      stories[i++] = HN.hnRequest(HN.item(id))
+//    return Gson().toJson(stories)
+  }
 }

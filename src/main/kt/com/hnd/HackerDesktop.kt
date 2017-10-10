@@ -15,6 +15,11 @@ class HackerDesktop(val port: Int, userDataPath: String) {
     lateinit var _endpoint: String
     lateinit var PID: String
     lateinit var _server: RequestServer
+    val _storyMap: MutableMap<String, StoryCache> = mutableMapOf()
+  }
+
+  private fun initStories() {
+    arrayOf("new", "top", "best", "ask", "show", "job").map { _storyMap.put(it, StoryCache(it)) }
   }
 
   init {
@@ -31,5 +36,6 @@ class HackerDesktop(val port: Int, userDataPath: String) {
     Log.info("==========Hacker Desktop==========")
     Log.info("Internal server started at: " + _endpoint)
     Log.info("Log directory: " + _userData)
+    initStories()
   }
 }
