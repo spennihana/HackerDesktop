@@ -56,7 +56,7 @@ object Handlers {
   }
 
   fun getTop(request:Request, response:Response):String {
-    return "[\"top\",\"1\",\"2\",\"3\"]"
+    return "[\"top\",\"1\",\"2\",\"3\",\"top\",\"1\",\"2\",\"3\",\"top\",\"1\",\"2\",\"3\"]"
   }
 
   fun getBest(request:Request, response:Response):String {

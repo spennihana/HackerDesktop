@@ -25,10 +25,6 @@ class HackerDesktop(val port: Int, userDataPath: String) {
     val i = n.indexOf('@')
     if (i != -1) PID = java.lang.Long.parseLong(n.substring(0, i)).toString()
 
-
-
-
-
     // init the rest server endpoints
     _server = RequestServer(port)
     _server.boot()

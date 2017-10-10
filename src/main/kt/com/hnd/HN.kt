@@ -16,12 +16,7 @@ object HN {
   fun item(item: Int):String { return "$HN_URL/item/$item.json"}
 
   // stories
-  fun newStories():String  { return "$HN_URL/new$STORIES" }
-  fun topStories():String  { return "$HN_URL/top$STORIES" }
-  fun bestStories():String { return "$HN_URL/best$STORIES"}
-  fun askStories():String  { return "$HN_URL/ask$STORIES" }
-  fun showStories():String { return "$HN_URL/show$STORIES"}
-  fun jobStories():String  { return "$HN_URL/job$STORIES" }
+  fun storiesURL(story:String):String { return "$HN_URL/$story$STORIES"}
 
   // updates
   fun updates():String { return "$HN_URL/updates.json"}
@@ -42,4 +37,13 @@ object HN {
       }
     }
   }
+}
+
+data class Item(val item:String, var sort:Int)
+class StoryCache(val story:String) {
+  var _ids: IntArray? = null
+  fun getAll() {
+    val res = HN.hnRequest(HN.storiesURL(story))
+  }
+
 }
