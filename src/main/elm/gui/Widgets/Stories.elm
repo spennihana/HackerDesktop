@@ -3,21 +3,25 @@ module Widgets.Stories exposing (..)
 
 -- sys imports
 import Html exposing (Html)
-import Element exposing (Element, column, text, el, empty, node, row)
+import Element exposing (Element, column, text, el, empty, node, row, wrappedRow, wrappedColumn, newTab,
+                         paragraph, textLayout, full, html)
 import Element.Attributes exposing (px, padding, height, fill, width, fill, vary,
                                     toAttr, verticalCenter, center, spacing, id,
-                                    percent, alignRight, moveDown, classList, class,
-                                    alignLeft, paddingXY, attribute, yScrollbar
+                                    percent, alignRight, alignBottom, moveDown, classList, class,
+                                    alignLeft, paddingXY, attribute, yScrollbar, xScrollbar, moveLeft
                                     )
 import Element.Events exposing (onWithOptions, on)
 import Element.Input
 import Json.Decode as JDecode
 import InfiniteScroll as IS
 import Http
+import Html
+import Html.Attributes
 import Task
+import Time exposing (Time)
 -- user imports
-import Utils.Utils exposing (doTask)
-import Utils.Decoders exposing (Item, decodeItem, viewItem)
+import Utils.Utils exposing (doTask, humanTime, urlScrape)
+import Utils.Decoders exposing (Item, decodeItem)
 import Styles exposing (Styles(..))
 import Widgets.ResizeableWidget exposing (Widget, Resizer(..), Msg(..))
 import Json.Decode as Decode
@@ -33,6 +37,7 @@ type alias Stories
     , type_: StoryType
     , infScroll: IS.Model Msg
     , page: Int -- pages are 30 items long
+    , curtime: Int
     }
 
 type Msg
@@ -41,8 +46,9 @@ type Msg
   | ChangeStory String
   | InfScrollMsg IS.Msg
   | OnScroll JDecode.Value
-  | OnUnderflow JDecode.Value
   | OnDataRetrieved (Result Http.Error (List Item))
+  | Reset (Result Http.Error Bool)
+  | OnTime Time
   | LoadMore
 
 type alias StoriesWidget
@@ -59,6 +65,7 @@ init =
     , type_=Top
     , infScroll= IS.startLoading infScroll
     , page=0
+    , curtime=0
     } LeftRight .x
 
 update: Msg -> StoriesWidget -> (StoriesWidget, Cmd Msg)
@@ -75,16 +82,18 @@ update msg widg
 
     ChangeStory story ->
       let
-        stories = {stories=[], type_=str2Type story, infScroll=swidget.infScroll, page=0}
+        stories = {stories=[], type_=str2Type story, infScroll=swidget.infScroll, page=0,curtime=0}
         newwidg = {widg|widget=stories}
       in
-        newwidg ! [loadContent newwidg]
+        newwidg ! [resetContent widg, loadContent newwidg]
 
     InfScrollMsg imsg ->
       let (infScroll, cmd) = IS.update InfScrollMsg imsg swidget.infScroll
           newwidg = {swidget|infScroll=infScroll}
       in
         {widg| widget=newwidg} ! [cmd]
+
+    Reset r -> widg![]
 
     OnDataRetrieved (Err e) ->
       let infScroll = IS.stopLoading swidget.infScroll
@@ -98,17 +107,24 @@ update msg widg
           infScroll = IS.stopLoading swidget.infScroll
           newwidg = {swidget|stories=stories, infScroll=infScroll, page= swidget.page+1}
       in
-        {widg|widget=newwidg}![]
+        {widg|widget=newwidg}![Task.perform OnTime Time.now]
 
     OnScroll value -> widg![IS.cmdFromScrollEvent InfScrollMsg value]
-    OnUnderflow value ->
-      let _= log "foo" "basdf" in
-      widg![]
 
     LoadMore -> widg![loadContent widg]
 
+    OnTime t ->
+      let newwidg = {swidget|curtime=round <| t/1000} in
+      {widg| widget=newwidg} ! []
+
 decoder: JDecode.Decoder (List Item)
 decoder = JDecode.list decodeItem
+
+resetContent: StoriesWidget -> Cmd Msg
+resetContent s
+  = let url = "http://localhost:3984/reset" in
+    Http.get url (JDecode.succeed True)
+      |> Http.send Reset
 
 loadContent: StoriesWidget -> Cmd Msg
 loadContent s
@@ -125,7 +141,7 @@ nToFetch: StoriesWidget -> Int
 nToFetch s
   = case s.widget.page>0 of
     True -> 5
-    False -> 50
+    False -> 20
 
 str2Type: String -> StoryType
 str2Type s
@@ -181,17 +197,36 @@ items swidg
   = column Items
       [ height fill
       , width fill
+      , paddingXY 10 0
       , yScrollbar
       , on "scroll" (JDecode.map OnScroll JDecode.value)
-      , on "underflow" (JDecode.map OnUnderflow JDecode.value)
       ]
       [ column None [height <| px 40, width fill]
-          <| List.map (\s -> storyItem s) swidg.widget.stories
+          <| List.map (\s -> storyItem s swidg.widget.curtime) swidg.widget.stories
       ]
 
-storyItem: Item -> Element Styles v Msg
-storyItem item
-  = el None[](text <| toString item.id)
+storyItem: Item -> Int -> Element Styles v Msg
+storyItem item curtime
+  = column StoryItem
+      [ height <| px 80
+      , width fill
+      , spacing 8
+      ][ row StoryItemHeader[][text item.by, text " | ", text <| humanTime (toFloat<| curtime - item.time)]
+       , row StoryItemTitle[height <| px 20, xScrollbar][newTab item.url <| html <| Html.div[Html.Attributes.style[("width", "100%"), ("white-space", "nowrap"), ("overflow-y", "hidden"), ("overflow-x", "scroll")]][Html.text item.title]]
+       , row None[height <| px 30]
+          [ column None[alignBottom, width <| percent 80][row StoryItemHeader[][text <| (toString item.score) ++ " | " ++ urlScrape item.url]]
+          , column None[width fill, height fill]
+              [row None[alignRight, moveLeft 10, onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed NoOp)]
+                  [ row Comment[]
+                    [ el CommentBubble
+                      [height <| px 30, width <| px 30
+                      ](node "i" <| el None [class "fa fa-comments", center, verticalCenter] empty)
+                    , el None[verticalCenter](text <| String.padLeft 2 ' ' <| toString <| List.length item.kids)
+                    ]
+                  ]
+              ]
+          ]
+       ]
 
 dragger: StoriesWidget -> Element Styles v Widgets.ResizeableWidget.Msg
 dragger swidg

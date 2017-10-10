@@ -16,11 +16,11 @@ class HackerDesktop(val port: Int, userDataPath: String) {
     lateinit var PID: String
     lateinit var _server: RequestServer
     val _storyMap: MutableMap<String, StoryCache> = mutableMapOf()
+    fun reset() {
+      _storyMap.values.map { it._fetchedSoFar=0 }
+    }
   }
-
-  private fun initStories() {
-    arrayOf("new", "top", "best", "ask", "show", "job").map { _storyMap.put(it, StoryCache(it)) }
-  }
+  fun initStories() { arrayOf("new", "top", "best", "ask", "show", "job").map { _storyMap.put(it, StoryCache(it)) } }
 
   init {
     _userData = userDataPath

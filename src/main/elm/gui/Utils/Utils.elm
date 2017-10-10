@@ -43,6 +43,37 @@ chunksOfRight k s =
       else
           [s]
 
+{-| Truncate float to dig digits -}
+roundTo: Int -> Float -> Float
+roundTo dig f=
+  let
+    a = round <| f*(toFloat <| 10^dig)
+  in
+    (toFloat a) / (toFloat <| 10^dig)
+
 -- Callback from browser with window size
 winsize : (Window.Size -> msg) -> Cmd msg
 winsize msg = Task.perform msg Window.size
+
+humanHours: Float -> String
+humanHours elapsed_hours
+  = (toString (roundTo 1 elapsed_hours)) ++ " hour(s) ago"
+
+humanMinutes: Float -> String
+humanMinutes elapsed_minutes
+  = (toString <| round elapsed_minutes) ++ " minute(s) ago"
+
+humanTime: Float -> String
+humanTime elapsed_seconds
+  = case elapsed_seconds / 3600 > 1 of
+    True -> humanHours <| elapsed_seconds / 3600
+    False -> case elapsed_seconds / 60 > 1 of
+             True -> humanMinutes <| elapsed_seconds / 60
+             False -> (toString elapsed_seconds) ++ " second(s) ago"
+
+urlScrape: String -> String
+urlScrape url
+  = String.split "/" url
+      |> List.drop 2
+      |> List.head
+      |> Maybe.withDefault ""

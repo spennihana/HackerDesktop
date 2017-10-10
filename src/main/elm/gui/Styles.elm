@@ -21,6 +21,11 @@ type Styles
   | Sidebar
   | SidebarButton SidebarButtonStyles
   | Refresh
+  | StoryItem
+  | StoryItemHeader
+  | Comment
+  | CommentBubble
+  | StoryItemTitle
 
 type SidebarButtonStyles
   = Selected
@@ -75,4 +80,9 @@ appstyles =
         , hover [Style.Color.text Color.white, Style.Color.background <| Color.rgba 115 210 22 0.60]
         ]
     , style Items[]
+    , style StoryItem[Border.bottom 1]
+    , style StoryItemHeader[Font.size 13, Style.Color.text Color.lightCharcoal]
+    , style StoryItemTitle[Font.size 18, Style.Color.text Color.black]
+    , style Comment[Font.size 15, Style.cursor "pointer"]
+    , style CommentBubble[Font.size 18, Style.Color.text Color.black]
     ]

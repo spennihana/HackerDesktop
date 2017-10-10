@@ -3,46 +3,43 @@ module Utils.Decoders exposing (..)
 import Json.Decode as JDecode exposing (field)
 import Json.Decode.Pipeline exposing (decode, required, optional)
 
-import Element exposing (el, empty, Element)
+import Element exposing (el, empty, Element, column, row)
+import Element.Attributes exposing (width, height, fill, px)
 import Styles exposing (..)
 
 type alias Item
   = { id: Int
-    , deleted: Maybe Bool
-    , type_: Maybe String
-    , by: Maybe String
-    , time: Maybe Int
-    , text: Maybe String
-    , dead: Maybe Bool
-    , parent: Maybe Int
-    , poll: Maybe Int
+    , deleted: Bool
+    , type_: String
+    , by: String
+    , time: Int
+    , text: String
+    , dead: Bool
+    , parent: Int
+    , poll: Int
     , kids: List Int
-    , url: Maybe String
-    , score: Maybe Int
-    , title: Maybe String
+    , url: String
+    , score: Int
+    , title: String
     , parts: List Int
-    , descendants: Maybe Int
+    , descendants: Int
     }
 
 decodeItem: JDecode.Decoder Item
 decodeItem
   = decode Item
     |> required "id" JDecode.int
-    |> optional "deleted" (JDecode.map Just JDecode.bool) Nothing
-    |> optional "type" (JDecode.map Just JDecode.string) Nothing
-    |> optional "by" (JDecode.map Just JDecode.string) Nothing
-    |> optional "time" (JDecode.map Just JDecode.int) Nothing
-    |> optional "text" (JDecode.map Just JDecode.string) Nothing
-    |> optional "dead" (JDecode.map Just JDecode.bool) Nothing
-    |> optional "parent" (JDecode.map Just JDecode.int) Nothing
-    |> optional "poll" (JDecode.map Just JDecode.int) Nothing
+    |> optional "deleted" JDecode.bool False
+    |> optional "type" JDecode.string ""
+    |> optional "by" JDecode.string ""
+    |> optional "time" JDecode.int -1
+    |> optional "text" JDecode.string ""
+    |> optional "dead" JDecode.bool False
+    |> optional "parent" JDecode.int -1
+    |> optional "poll" JDecode.int -1
     |> optional "kids" (JDecode.list JDecode.int) []
-    |> optional "url" (JDecode.map Just JDecode.string) Nothing
-    |> optional "score" (JDecode.map Just JDecode.int) Nothing
-    |> optional "title" (JDecode.map Just JDecode.string) Nothing
+    |> optional "url" JDecode.string ""
+    |> optional "score" JDecode.int -1
+    |> optional "title" JDecode.string ""
     |> optional "parts" (JDecode.list JDecode.int) []
-    |> optional "descendants" (JDecode.map Just JDecode.int) Nothing
-
-viewItem: msg -> Item -> Element Styles v msg
-viewItem msg item
-  = el None[](empty)
+    |> optional "descendants" JDecode.int -1

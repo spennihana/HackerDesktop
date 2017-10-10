@@ -1,6 +1,7 @@
 package com.hnd
 
 import com.hnd.Handlers.doGet
+import com.hnd.Handlers.reset
 import com.hnd.util.Log
 import spark.Filter
 import spark.Request
@@ -35,6 +36,7 @@ class RequestServer(val port: Int) {
 
     // custom routes
     Spark.get("/:story/:n", {req,res -> genericHandler(req,res, ::doGet)})
+    Spark.get("/reset", {req,res -> genericHandler(req,res, ::reset)})
   }
 }
 
@@ -43,5 +45,10 @@ object Handlers {
     var story = request.params("story")
     if( story=="jobs" ) story="job"
     return HackerDesktop._storyMap[story]!!.loadMore(request.params("n").toInt())
+  }
+
+  fun reset(request:Request, response:Response):String {
+    HackerDesktop.reset()
+    return ""
   }
 }

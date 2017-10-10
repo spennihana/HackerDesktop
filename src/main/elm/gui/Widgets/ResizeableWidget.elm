@@ -51,7 +51,7 @@ update msg model =
         y0 = dinfo.y0
         v = dinfo.toP p
         h  = if y0== -1 then dinfo.h0 else (dinfo.resizer dinfo.h0 dinfo.y0 v)
-        new_dinfo = {dinfo | y0 = clamp (dragmin+dragoff) (dragmax+dragoff) v, h0=clamp dragmin dragmax h}
+        new_dinfo = {dinfo | y0 = v, h0= h}
       in {model | dinfo=new_dinfo} ! []
     DragEnd p ->
       let

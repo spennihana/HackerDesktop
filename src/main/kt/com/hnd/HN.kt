@@ -1,5 +1,6 @@
 package com.hnd
 
+import com.google.gson.Gson
 import com.hnd.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -29,9 +30,13 @@ object HN {
       BufferedReader(InputStreamReader(inputStream)).use {
         val res = StringBuffer()
         var line = it.readLine()
+        var i =0
         while( line!=null ) {
           res.append(line)
           line = it.readLine()
+          i++
+          if( i%1000 ==0 )
+            Log.info("Got i: " + i)
         }
         return res.toString()
       }
@@ -48,10 +53,10 @@ class StoryCache(val story:String) {
   var _ids: IntArray? = null
   var _fetchedSoFar:Int = 0
   fun fetchAll() {
-//    val res = HN.hnRequest(HN.storiesURL(story))
-//    _ids = Gson().fromJson(res, IntArray::class.java)
-//    if( _ids==null )
-//      throw IllegalStateException("Unable to fetch $story stories")
+    val res = HN.hnRequest(HN.storiesURL(story))
+    _ids = Gson().fromJson(res, IntArray::class.java)
+    if( _ids==null )
+      throw IllegalStateException("Unable to fetch $story stories")
   }
 
   private fun range(index: IntArray?, start: Int, cnt: Int): IntArray? {
@@ -70,15 +75,12 @@ class StoryCache(val story:String) {
     return res
   }
 
-  val s = """{"by":"gsempe","descendants":23,"id":15424437,"kids":[15426103,15425772,15427111,15426279,15428238,15428066,15428070,15428900,15425971],"score":240,"time":1507394136,"title":"A Simple Approach to Building a Real-Time Collaborative Text Editor","type":"story","url":"http://digitalfreepen.com/2017/10/06/simple-real-time-collaborative-text-editor.html"}"""
-
   fun loadMore(nToFetch:Int):String {
-    return "[$s]"
-//    val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return Gson().toJson(null)
-//    val stories = arrayOfNulls<String>(ids.size)
-//    var i=0
-//    for(id in ids)
-//      stories[i++] = HN.hnRequest(HN.item(id))
-//    return Gson().toJson(stories)
+    val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return Gson().toJson(null)
+    val sb: StringBuilder = StringBuilder("[")
+    for(id in ids)
+      sb.append(HN.hnRequest(HN.item(id))).append(",")
+    sb.deleteCharAt(sb.lastIndex).append("]")
+    return sb.toString()
   }
 }

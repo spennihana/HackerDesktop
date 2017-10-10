@@ -72,7 +72,7 @@ object Log {
     val sb = StringBuilder()
     for (o in objs) sb.append(o)
     val res = sb.toString()
-    _preHeader = fixedLength(HackerDesktop._endpoint + " ", 8) + fixedLength(HackerDesktop.PID + " ", 4)
+    _preHeader = fixedLength(HackerDesktop._endpoint + " ", 12) + fixedLength(HackerDesktop.PID + " ", 6)
     if (INIT_MSGS != null) {   // Ahh, dump any initial buffering
       val bufmsgs = INIT_MSGS
       INIT_MSGS = null
