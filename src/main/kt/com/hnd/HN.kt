@@ -46,17 +46,24 @@ object HN {
 
 data class Item(val item:String, var sort:Int)
 class StoryCache(val story:String) {
-  companion object {
-    const val ITEMS_PER_PAGE = 30
-  }
   init { fetchAll() }
   var _ids: IntArray? = null
   var _fetchedSoFar:Int = 0
+  var _cache: MutableMap<Int,String> = mutableMapOf()
   fun fetchAll() {
     val res = HN.hnRequest(HN.storiesURL(story))
     _ids = Gson().fromJson(res, IntArray::class.java)
     if( _ids==null )
       throw IllegalStateException("Unable to fetch $story stories")
+  }
+  fun reset() {
+    _fetchedSoFar=0
+  }
+
+  fun refresh() {
+    _cache.clear()
+    reset()
+    fetchAll()
   }
 
   private fun range(index: IntArray?, start: Int, cnt: Int): IntArray? {
@@ -78,8 +85,10 @@ class StoryCache(val story:String) {
   fun loadMore(nToFetch:Int):String {
     val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return Gson().toJson(null)
     val sb: StringBuilder = StringBuilder("[")
-    for(id in ids)
-      sb.append(HN.hnRequest(HN.item(id))).append(",")
+    for(id in ids) {
+      if( _cache[id]==null) _cache[id] = HN.hnRequest(HN.item(id))
+      sb.append(_cache[id]).append(",")
+    }
     sb.deleteCharAt(sb.lastIndex).append("]")
     return sb.toString()
   }

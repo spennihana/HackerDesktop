@@ -59,7 +59,7 @@ subscriptions swidg = Sub.batch [ Sub.map WidgetMsg (Widgets.ResizeableWidget.su
 
 init: StoriesWidget
 init =
-  let infScroll = IS.init loadMore |> IS.offset 0 |> IS.direction IS.Bottom in
+  let infScroll = IS.init loadMore |> IS.offset 800 |> IS.direction IS.Bottom in
   Widgets.ResizeableWidget.init
     { stories=[]
     , type_=Top

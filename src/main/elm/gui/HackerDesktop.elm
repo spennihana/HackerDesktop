@@ -23,5 +23,4 @@ init =
 subscriptions: HNDModel -> Sub HNDMsg
 subscriptions model
   = Sub.batch
-    [ Sub.map StoriesMsg (Widgets.Stories.subscriptions model.storyWidget)
-    ]
+    [ Sub.map StoriesMsg (Widgets.Stories.subscriptions model.storyWidget) ]
