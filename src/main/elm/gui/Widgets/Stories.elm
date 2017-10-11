@@ -212,7 +212,11 @@ storyItem item curtime
       , width fill
       , spacing 8
       ][ row StoryItemHeader[][text item.by, text " | ", text <| humanTime (toFloat<| curtime - item.time)]
-       , row StoryItemTitle[height <| px 20, xScrollbar][newTab item.url <| html <| Html.div[Html.Attributes.style[("width", "100%"), ("white-space", "nowrap"), ("overflow-y", "hidden"), ("overflow-x", "scroll")]][Html.text item.title]]
+       , row StoryItemTitle[height <| px 20, xScrollbar]
+          [newTab item.url
+            <| html
+            <| Html.div[Html.Attributes.style[("width", "100%"), ("white-space", "nowrap"), ("overflow-y", "hidden"), ("overflow-x", "scroll")]] -- FIXME: hack to get horizontal text scroll
+                       [Html.text item.title]]
        , row None[height <| px 30]
           [ column None[alignBottom, width <| percent 80][row StoryItemHeader[][text <| (toString item.score) ++ " | " ++ urlScrape item.url]]
           , column None[width fill, height fill]

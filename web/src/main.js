@@ -60,8 +60,19 @@ const createWindow = () => {
     height: 900,
     minWidth: 800,
     minHeight: 600,
-    titleBarStyle: 'hidden'
-  }); 
+    titleBarStyle: 'hidden',
+    webPreferences: {
+        nativeWindowOpen: true
+      }
+  });
+
+  mainWindow.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+    Object.assign(options, {
+      width: 800,
+      height: 600,
+      titleBarStyle: 'show'
+    })
+  })
 
   // and load the index.html of the app.
   mainWindow.loadURL(`file://${__dirname}/index.html`);

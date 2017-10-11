@@ -45,11 +45,13 @@ object HN {
 }
 
 data class Item(val item:String, var sort:Int)
+data class Comment(val comment:String, val kids: Array<Comment>)
 class StoryCache(val story:String) {
   init { fetchAll() }
   var _ids: IntArray? = null
   var _fetchedSoFar:Int = 0
-  var _cache: MutableMap<Int,String> = mutableMapOf()
+  val _cache: MutableMap<Int,String> = mutableMapOf()
+  val _comments: MutableMap<Int,String> = mutableMapOf()
   fun fetchAll() {
     val res = HN.hnRequest(HN.storiesURL(story))
     _ids = Gson().fromJson(res, IntArray::class.java)
@@ -62,6 +64,7 @@ class StoryCache(val story:String) {
 
   fun refresh() {
     _cache.clear()
+    _comments.clear()
     reset()
     fetchAll()
   }
@@ -80,6 +83,10 @@ class StoryCache(val story:String) {
     while (i < cnt) res[i++] = index[start++]
     _fetchedSoFar += cnt
     return res
+  }
+
+  fun getComments(pid:Int, cids:IntArray?):String {
+    throw IllegalArgumentException("unimpl")
   }
 
   fun loadMore(nToFetch:Int):String {
