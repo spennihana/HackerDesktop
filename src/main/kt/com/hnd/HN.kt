@@ -45,13 +45,13 @@ object HN {
 }
 
 data class Item(val item:String, var sort:Int)
-data class Comment(val comment:String, val kids: Array<Comment>)
+data class Comment(val comment: String?, val kids: Array<Comment?>?)
 class StoryCache(val story:String) {
   init { fetchAll() }
   var _ids: IntArray? = null
   var _fetchedSoFar:Int = 0
   val _cache: MutableMap<Int,String> = mutableMapOf()
-  val _comments: MutableMap<Int,String> = mutableMapOf()
+  val _comments: MutableMap<Int,Comment?> = mutableMapOf()
   fun fetchAll() {
     val res = HN.hnRequest(HN.storiesURL(story))
     _ids = Gson().fromJson(res, IntArray::class.java)
@@ -86,11 +86,25 @@ class StoryCache(val story:String) {
   }
 
   fun getComments(pid:Int, cids:IntArray?):String {
-    throw IllegalArgumentException("unimpl")
+    if( cids==null ) return ""
+    if( _comments[pid]==null ) {
+      val kids = arrayOfNulls<Comment>(cids.size)
+      var i=0
+      for(id in cids)
+        kids[i++] = Comment(HN.hnRequest(HN.item(id)), null)
+      _comments[pid] = Comment(null, kids)
+    }
+    val sb = StringBuilder("[")
+    val parent = _comments[pid] ?: return ""
+    val comments = parent.kids
+    for(comment in comments!!)
+      sb.append(comment?.comment).append(",")
+    sb.deleteCharAt(sb.lastIndex).append("]")
+    return sb.toString()
   }
 
   fun loadMore(nToFetch:Int):String {
-    val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return Gson().toJson(null)
+    val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return ""
     val sb: StringBuilder = StringBuilder("[")
     for(id in ids) {
       if( _cache[id]==null) _cache[id] = HN.hnRequest(HN.item(id))

@@ -50,6 +50,7 @@ type Msg
   | Reset (Result Http.Error Bool)
   | OnTime Time
   | LoadMore
+  | ShowComments Item
 
 type alias StoriesWidget
   = Widgets.ResizeableWidget.Widget Stories
@@ -112,6 +113,8 @@ update msg widg
     OnScroll value -> widg![IS.cmdFromScrollEvent InfScrollMsg value]
 
     LoadMore -> widg![loadContent widg]
+
+    ShowComments item -> widg![]  -- show logic handled in main updater
 
     OnTime t ->
       let newwidg = {swidget|curtime=round <| t/1000} in
@@ -221,7 +224,7 @@ storyItem item curtime
           [ column None[alignBottom, width <| percent 80][row StoryItemHeader[][text <| (toString item.score) ++ " | " ++ urlScrape item.url]]
           , column None[width fill, height fill]
               [row None[alignRight, moveLeft 10, onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed NoOp)]
-                  [ row Comment[]
+                  [ row Comment[onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed (ShowComments item))]
                     [ el CommentBubble
                       [height <| px 30, width <| px 30
                       ](node "i" <| el None [class "fa fa-comments", center, verticalCenter] empty)
