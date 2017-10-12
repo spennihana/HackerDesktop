@@ -41,9 +41,9 @@ class RequestServer(val port: Int) {
     })
 
     // custom routes
-    registeRoute("/:story/:n", ::getStories)
+    registeRoute("/stories/:story/:n", ::getStories)
     registeRoute("/reset/", ::reset)
-    registeRoute("/:pid/:cids", ::getComments)
+    Spark.post("/comments/:pid/:cids", {req,res -> genericHandler(req,res,::getComments)})
   }
 }
 

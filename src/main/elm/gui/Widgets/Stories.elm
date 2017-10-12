@@ -73,7 +73,8 @@ update: Msg -> StoriesWidget -> (StoriesWidget, Cmd Msg)
 update msg widg
   = let swidget = widg.widget in
     case msg of
-    NoOp -> widg ! []
+    NoOp ->
+      widg![]
 
     WidgetMsg wmsg ->
       let
@@ -94,7 +95,8 @@ update msg widg
       in
         {widg| widget=newwidg} ! [cmd]
 
-    Reset r -> widg![]
+    Reset r ->
+      widg![]
 
     OnDataRetrieved (Err e) ->
       let infScroll = IS.stopLoading swidget.infScroll
@@ -110,11 +112,14 @@ update msg widg
       in
         {widg|widget=newwidg}![Task.perform OnTime Time.now]
 
-    OnScroll value -> widg![IS.cmdFromScrollEvent InfScrollMsg value]
+    OnScroll value ->
+      widg![IS.cmdFromScrollEvent InfScrollMsg value]
 
-    LoadMore -> widg![loadContent widg]
+    LoadMore ->
+      widg![loadContent widg]
 
-    ShowComments item -> widg![]  -- show logic handled in main updater
+    ShowComments item ->
+      widg![]  -- show logic handled in main updater
 
     OnTime t ->
       let newwidg = {swidget|curtime=round <| t/1000} in
@@ -131,7 +136,7 @@ resetContent s
 
 loadContent: StoriesWidget -> Cmd Msg
 loadContent s
-  = let url = "http://localhost:3984/" ++ (String.toLower <| type2Str s) ++ "/" ++ (toString <| nToFetch s) in
+  = let url = "http://localhost:3984/stories/" ++ (String.toLower <| type2Str s) ++ "/" ++ (toString <| nToFetch s) in
     Http.get url decoder
       |> Http.send OnDataRetrieved
 

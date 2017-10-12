@@ -45,13 +45,14 @@ object HN {
 }
 
 data class Item(val item:String, var sort:Int)
-data class Comment(val comment: String?, val kids: Array<Comment?>?)
+data class Comment(val comment: String?, var depth:Int, val kids: Array<Comment?>?)
 class StoryCache(val story:String) {
   init { fetchAll() }
   var _ids: IntArray? = null
   var _fetchedSoFar:Int = 0
   val _cache: MutableMap<Int,String> = mutableMapOf()
-  val _comments: MutableMap<Int,Comment?> = mutableMapOf()
+  val _comments: MutableMap<Int,Array<Comment?>> = mutableMapOf()
+  val _depthMap: MutableMap<Int, Int> = mutableMapOf() // know depth of parent
   fun fetchAll() {
     val res = HN.hnRequest(HN.storiesURL(story))
     _ids = Gson().fromJson(res, IntArray::class.java)
@@ -60,11 +61,12 @@ class StoryCache(val story:String) {
   }
   fun reset() {
     _fetchedSoFar=0
+    _comments.clear()
+    _depthMap.clear()
   }
 
   fun refresh() {
     _cache.clear()
-    _comments.clear()
     reset()
     fetchAll()
   }
@@ -85,22 +87,42 @@ class StoryCache(val story:String) {
     return res
   }
 
+  // comments are a recursive structure as follows:
+  //    id -> [c0,c1,...,cn]
+  // each comment is some text and a list of 0 or more responses
+  // we're only ever concerned in a single layer at a time (fewer requests)
+  // track the depth with a global map of comment depth
+  //
+  // semantics of the _comments cache:
+  //    if an id is not found in _comments, then the id is a story id
+  //    if an id is found, then it's a story or parent comment
+  //      if there are no kids, then fetch kids
+  //    return kids
   fun getComments(pid:Int, cids:IntArray?):String {
-    if( cids==null ) return ""
-    if( _comments[pid]==null ) {
+    if( cids==null || cids.isEmpty() ) return ""
+    if( _comments[pid]==null || _comments[pid]!!.isEmpty() ) { // only occurs if pid is a story id
+      assert(_cache[pid]!=null)  // assert pid is a story id
       val kids = arrayOfNulls<Comment>(cids.size)
       var i=0
-      for(id in cids)
-        kids[i++] = Comment(HN.hnRequest(HN.item(id)), null)
-      _comments[pid] = Comment(null, kids)
+      val depth = if(_depthMap[pid]==null ) 0 else (1+_depthMap[pid]!!)
+      for(id in cids) {
+        kids[i++] = Comment(HN.hnRequest(HN.item(id)), depth, null)
+        _comments[id] = emptyArray() // flag the next level as empty array
+        _depthMap[id] = depth
+      }
+      _comments[pid] = kids
     }
     val sb = StringBuilder("[")
-    val parent = _comments[pid] ?: return ""
-    val comments = parent.kids
-    for(comment in comments!!)
+    val comments = _comments[pid] ?: return ""
+    for(comment in comments)
       sb.append(comment?.comment).append(",")
     sb.deleteCharAt(sb.lastIndex).append("]")
-    return sb.toString()
+    return StringBuilder("{")
+        .append("\"parent\":").append(pid).append(",")
+        .append("\"depth\":").append(_depthMap[cids[0]]).append(",")
+        .append("\"comments\":").append(sb.toString())
+        .append("}")
+        .toString()
   }
 
   fun loadMore(nToFetch:Int):String {

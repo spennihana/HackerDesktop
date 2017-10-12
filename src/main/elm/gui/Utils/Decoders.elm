@@ -43,3 +43,16 @@ decodeItem
     |> optional "title" JDecode.string ""
     |> optional "parts" (JDecode.list JDecode.int) []
     |> optional "descendants" JDecode.int -1
+
+
+type alias ResponseList
+  = { parent: Int
+    , depth: Int
+    , items: List Item
+    }
+decodeComment: JDecode.Decoder ResponseList
+decodeComment
+  = decode Comment
+    |> required "parent" JDecode.int
+    |> required "depth" JDecode.int
+    |> required "comments" (JDecode.list decodeItem)
