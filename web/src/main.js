@@ -24,7 +24,6 @@ var Log = new (winston.Logger)({
   ]
 });
 
-var port = -1;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -51,7 +50,12 @@ const killHackerDesktopProc = () => {
 }
 
 app.on('will-quit', killHackerDesktopProc)
-app.on('ready', startHNDesktopKt);
+app.on('ready', startHNDesktopKt)
+ipcMain.on('bootHND', (event, arg) => {
+  if( hndProc==null )
+    startHNDesktopKt();
+})
+
 
 const createWindow = () => {
   // Create the browser window.

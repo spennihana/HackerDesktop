@@ -10,7 +10,7 @@ import Element.Attributes exposing (px, padding, height, fill, width, fill, vary
                                     percent, alignRight, alignBottom, moveDown, classList, class,
                                     alignLeft, paddingXY, attribute, yScrollbar, xScrollbar, moveLeft
                                     )
-import Element.Events exposing (onWithOptions, on)
+import Element.Events exposing (onWithOptions, on, onClick)
 import Element.Input
 import Json.Decode as JDecode
 import InfiniteScroll as IS
@@ -229,7 +229,7 @@ storyItem item curtime
           [ column None[alignBottom, width <| percent 80][row StoryItemHeader[][text <| (toString item.score) ++ " | " ++ urlScrape item.url]]
           , column None[width fill, height fill]
               [row None[alignRight, moveLeft 10, onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed NoOp)]
-                  [ row CommentStyle[onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed (ShowComments item))]
+                  [ row CommentBubbleWrapper[onClick (ShowComments item)]
                     [ el CommentBubble
                       [height <| px 30, width <| px 30
                       ](node "i" <| el None [class "fa fa-comments", center, verticalCenter] empty)
@@ -247,7 +247,3 @@ dragger swidg
     , width <| px 2
     , onWithOptions "mousedown" Utils.Utils.clickOptionsTT (JDecode.succeed DragStart)
     ][el DraggerInner [height fill, width <| px 1, center](empty)]
-
-footer: StoriesWidget -> Element Styles v Msg
-footer swidg
-  = el None[](empty)

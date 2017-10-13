@@ -9,6 +9,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.*
 
+// totally overkill logger; boilerplate logger from other projects
 /** Log for HackerDesktop.
  */
 object Log {

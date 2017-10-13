@@ -17,12 +17,14 @@ type Styles
   | DraggerInner
   | Header
   | StoriesHeader
+  | CommentsHeader
   | Items
   | Sidebar
   | SidebarButton SidebarButtonStyles
   | Refresh
   | StoryItem
   | StoryItemHeader
+  | CommentBubbleWrapper
   | CommentStyle
   | CommentBubble
   | StoryItemTitle
@@ -66,6 +68,12 @@ appstyles =
         , Font.size 30
         , Style.Color.background Color.lightGray
         ]
+    , style CommentsHeader
+        [ Style.prop "-webkit-app-region" "drag"
+        , Font.size 30
+        , Border.bottom 1
+        , Style.Color.border Color.lightGray
+        ]
     , style Sidebar [ Style.prop "-webkit-user-select" "none"
                     , Style.Color.background <| Color.rgb 255 112 23
                     ]
@@ -83,6 +91,7 @@ appstyles =
     , style StoryItem[Border.bottom 1]
     , style StoryItemHeader[Font.size 13, Style.Color.text Color.lightCharcoal]
     , style StoryItemTitle[Font.size 18, Style.Color.text Color.black]
-    , style CommentStyle[Font.size 15, Style.cursor "pointer"]
+    , style CommentBubbleWrapper[Font.size 15, Style.cursor "pointer"]
     , style CommentBubble[Font.size 18, Style.Color.text Color.black]
+    , style CommentStyle[Border.bottom 1]
     ]

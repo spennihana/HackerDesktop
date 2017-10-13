@@ -43,10 +43,10 @@ class RequestServer(val port: Int) {
     // custom routes
     registeRoute("/stories/:story/:n", ::getStories)
     registeRoute("/reset/", ::reset)
-    Spark.post("/comments/:pid/:cids", {req,res -> genericHandler(req,res,::getComments)})
+    Spark.post("/comments/", {req,res -> genericHandler(req,res,::getComments)})
   }
 }
-
+data class GetComments(val story:String, val pid:Int, val cids:String)
 object Handlers {
 
   fun getStory(story:String):String {
@@ -64,9 +64,9 @@ object Handlers {
   }
 
   fun getComments(request:Request, response:Response):String {
-    val story = getStory(request.params("story"))
-    val pid = request.params("pid").toInt()
-    val cids = Gson().fromJson(request.params("cids"), IntArray::class.java)
-    return HackerDesktop._storyMap[story]!!.getComments(pid, cids)
+    val body = Gson().fromJson(request.body(), GetComments::class.java)
+    val story = getStory(body.story)
+    val cids = Gson().fromJson(body.cids, IntArray::class.java)
+    return HackerDesktop._storyMap[story]!!.getComments(body.pid, cids)
   }
 }

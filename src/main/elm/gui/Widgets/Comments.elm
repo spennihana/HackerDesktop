@@ -4,18 +4,23 @@ module Widgets.Comments exposing (..)
 -- sys imports
 import Dict exposing (Dict)
 import Html exposing (Html)
-import Element exposing (Element, column, text, el, empty, node, row)
+import Element exposing (Element, column, text, el, empty, node, row, wrappedRow,
+                         wrappedColumn, newTab,
+                         paragraph, textLayout, full, html)
 import Element.Attributes exposing (px, padding, height, fill, width, fill, vary,
                                     toAttr, verticalCenter, center, spacing, id,
-                                    percent, alignRight, moveRight, classList, class,
-                                    alignLeft, paddingXY, attribute
+                                    percent, alignRight, alignBottom, moveDown, classList, class,
+                                    alignLeft, paddingXY, attribute, yScrollbar, xScrollbar,
+                                    moveLeft, moveRight
                                     )
 import Element.Events exposing (onWithOptions)
 import Element.Input
 import Json.Decode as JDecode
+import Json.Encode as JEncode
 import Time exposing (Time)
 import Task
 import Http
+import Html.Attributes
 
 -- user imports
 import Styles exposing (Styles(..))
@@ -35,17 +40,19 @@ type Responses = Responses (List Comment)
 
 type Msg
   = NoOp
-  | GetComments Item
+  | GetComments String Item
   | OnDataRetrieved (Result Http.Error ResponseList)
   | OnTime Time
+  | ClearComments
 
 type alias CommentsWidget
   = { curtime: Int
     , comments: Dict Int Comment
+    , root: Responses
     }
 
 init: CommentsWidget
-init = {curtime= -1, comments=Dict.empty}
+init = {curtime= -1, comments=Dict.empty, root=Responses []}
 
 update: Msg -> CommentsWidget -> (CommentsWidget, Cmd Msg)
 update msg widg
@@ -53,8 +60,8 @@ update msg widg
     NoOp ->
       widg![]
 
-    GetComments item ->
-      widg![]
+    GetComments type_ item ->
+      widg![getComments type_ item]
 
     OnDataRetrieved (Err e) ->
       let _ = log "OnDataRetrieved" e in
@@ -69,8 +76,11 @@ update msg widg
             Nothing -> widg.comments
             Just p -> Dict.insert result.parent {p|kids = Just (Responses kids)} widg.comments
         newcomments = insertComments result.depth kids comments
+        root = updateRoot result.parent (Responses kids) widg.root
       in
-      {widg|comments=newcomments}![Task.perform OnTime Time.now]
+      {widg|comments=newcomments, root=root}![Task.perform OnTime Time.now]
+
+    ClearComments -> init![]
 
     OnTime t ->
       {widg| curtime = round <| t/1000}![]
@@ -78,6 +88,26 @@ update msg widg
 itemsToComments: Int -> List Item -> List Comment
 itemsToComments depth items
   = List.map(\i -> makeComment depth i) items
+
+updateRootHelp: Int -> Responses -> List Comment -> List Comment
+updateRootHelp pid newroot oldroot
+  = case oldroot of
+    [] ->
+      oldroot
+    x::xs ->
+      case x.cid == pid of
+      True -> {x|kids=Just newroot}::xs
+      False -> x::(updateRootHelp pid newroot xs)
+
+updateRoot: Int -> Responses -> Responses -> Responses
+updateRoot pid newroot oldroot
+  = case oldroot of
+    Responses r ->
+      case r of
+      [] ->
+        newroot
+      _ ->
+        Responses (updateRootHelp pid newroot r)
 
 insertComments: Int -> List Comment -> Dict Int Comment -> Dict Int Comment
 insertComments depth comments d
@@ -90,10 +120,17 @@ makeComment: Int -> Item -> Comment
 makeComment depth item
   = {cid=item.id, item=item, depth=depth, shown=False, kids=Nothing}
 
-getComments: Item -> Cmd Msg
-getComments s
-  = let url  = "http://localhost:3984/comments/" in
-    Http.post url (Http.multipartBody [ Http.stringPart "pid" (toString s.id), Http.stringPart "cids" (toString s.kids)]) decodeComment
+getComments: String -> Item -> Cmd Msg
+getComments type_ s
+  = let url = "http://localhost:3984/comments/"
+        obj = JEncode.object
+              [ ("story", JEncode.string <| String.toLower type_)
+              , ("pid", JEncode.string <| toString s.id)
+              , ("cids", JEncode.string <| toString s.kids)
+              ]
+        body = Http.stringBody "application/json" (JEncode.encode 0 obj)
+    in
+    Http.post url body decodeComment
       |> Http.send OnDataRetrieved
 
 view: CommentsWidget -> Element Styles v Msg
@@ -101,10 +138,45 @@ view cwidg
   = row None[moveRight 2, width fill, height fill]
       [comments cwidg]
 
+header: CommentsWidget -> Element Styles v Msg
+header cwidg
+  = row CommentsHeader
+      [ width fill
+      , height <| px 100
+      , padding 20
+      ]
+      [ el None[verticalCenter](text "Comments")
+      , row None
+         [height fill, width fill, alignRight, verticalCenter]
+         [el Refresh
+            [height <| px 30, width <| px 30
+            ](node "i" <| el None [class "fa fa-refresh", center, verticalCenter] empty)]
+      ]
+
 comments: CommentsWidget -> Element Styles v Msg
 comments cwidg
-  = row None[width fill, height fill][header cwidg, empty]
+  = case cwidg.root of
+    Responses [] -> column None[][empty]
+    Responses r ->
+      column None
+        [ width fill
+        , height fill
+        , yScrollbar
+        ]([header cwidg] ++ (showComments cwidg.curtime r))
 
-header: CommentsWidget -> Element Styles v Msg
-header swidg
-  = row Header [width fill, height <| px 25] [Element.empty]
+showComments: Int -> List Comment -> List (Element Styles v Msg)
+showComments curtime comments
+  = case comments of
+    [] -> []
+    x::xs -> (commentView curtime x)::(showComments curtime xs)
+
+embedHtml: String -> Element Styles v Msg
+embedHtml htmlStr
+  = html <| Html.div[(Html.Attributes.property "innerHTML" (JEncode.string htmlStr))][]
+
+commentView: Int -> Comment -> Element Styles v Msg
+commentView curtime comment
+  = column CommentStyle
+      [ width fill
+      , paddingXY 10 0
+      ][ row None[moveRight (toFloat <| comment.depth*10)][embedHtml comment.item.text] ]

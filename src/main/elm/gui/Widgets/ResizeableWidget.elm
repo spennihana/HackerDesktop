@@ -38,26 +38,22 @@ init widget resizer toP =
 
 update: Msg -> Widget a -> (Widget a, Cmd Msg)
 update msg model =
+  let dinfo = model.dinfo in
   case msg of
     DragStart ->
-     let
-       dinfo = model.dinfo
-       new_dinfo = {dinfo| dragging=True}
-     in
+     let new_dinfo = {dinfo| dragging=True} in
        { model | dinfo=new_dinfo } ! []
     DragPosition p ->
       let
-        dinfo = model.dinfo
         y0 = dinfo.y0
         v = dinfo.toP p
         h  = if y0== -1 then dinfo.h0 else (dinfo.resizer dinfo.h0 dinfo.y0 v)
         new_dinfo = {dinfo | y0 = v, h0= h}
-      in {model | dinfo=new_dinfo} ! []
+      in
+        {model | dinfo=new_dinfo} ! []
     DragEnd p ->
-      let
-        dinfo = model.dinfo
-        new_dinfo = {dinfo | dragging = False}
-      in {model | dinfo=new_dinfo } ! []
+      let new_dinfo = {dinfo | dragging = False} in
+        {model | dinfo=new_dinfo } ! []
 
 type alias DragInfo =
   { dragging: Bool,
