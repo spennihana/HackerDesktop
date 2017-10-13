@@ -13,7 +13,9 @@ import Element.Attributes exposing (px, padding, height, fill, width, fill, vary
 import Element.Events exposing (onWithOptions)
 import Element.Input
 import Json.Decode as JDecode
-import Time
+import Time exposing (Time)
+import Task
+import Http
 
 -- user imports
 import Styles exposing (Styles(..))
@@ -23,7 +25,8 @@ import Utils.Utils
 import Debug exposing (log)
 
 type alias Comment
-  = { item: Item
+  = { cid: Int
+    , item: Item
     , depth: Int
     , shown: Bool
     , kids: Maybe Responses
@@ -33,8 +36,8 @@ type Responses = Responses (List Comment)
 type Msg
   = NoOp
   | GetComments Item
-  | OnDataRetrieved (Result Http.Error (List Item))
-  | OnTime
+  | OnDataRetrieved (Result Http.Error ResponseList)
+  | OnTime Time
 
 type alias CommentsWidget
   = { curtime: Int
@@ -58,23 +61,34 @@ update msg widg
         widg![]
 
     OnDataRetrieved (Ok result) ->
-      let comments = unpackComments result.depth result.items widg.comments in
-      {widg|comments=comments}![Task.perform OnTime Time.now]
+      let
+        kids = itemsToComments result.depth result.items
+        parent = Dict.get result.parent widg.comments
+        comments
+          = case parent of
+            Nothing -> widg.comments
+            Just p -> Dict.insert result.parent {p|kids = Just (Responses kids)} widg.comments
+        newcomments = insertComments result.depth kids comments
+      in
+      {widg|comments=newcomments}![Task.perform OnTime Time.now]
 
     OnTime t ->
       {widg| curtime = round <| t/1000}![]
 
+itemsToComments: Int -> List Item -> List Comment
+itemsToComments depth items
+  = List.map(\i -> makeComment depth i) items
 
-unpackComments: Int -> List Item -> Dict Int Comment -> Dict Int Comment
-unpackComments depth comments d
+insertComments: Int -> List Comment -> Dict Int Comment -> Dict Int Comment
+insertComments depth comments d
   = case comments of
     [] -> d
     c::rest ->
-      unpackComments depth rest (Dict.insert c.id (makeComment depth c))
+      insertComments depth rest (Dict.insert c.cid c d)
 
 makeComment: Int -> Item -> Comment
 makeComment depth item
-  = {item=item, depth=depth, shown=False, kids=Nothing}
+  = {cid=item.id, item=item, depth=depth, shown=False, kids=Nothing}
 
 getComments: Item -> Cmd Msg
 getComments s

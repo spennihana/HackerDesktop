@@ -17,14 +17,14 @@ update msg model =
       model![]
 
     StoriesMsg smsg ->
-      case msg of
+      case smsg of
       Widgets.Stories.ShowComments item ->  -- pass msg from the stories widget to the comments widget
-        update CommentsMsg (Widgets.Comments.GetComments item) model
+        update (CommentsMsg (Widgets.Comments.GetComments item)) model
 
       _ ->
         let (swidg, scmd) = Widgets.Stories.update smsg model.storyWidget in
           {model| storyWidget = swidg}![Cmd.map StoriesMsg scmd]
 
     CommentsMsg cmsg ->
-      let (cwidg, ccmd) = Widgets.Comments.update msg model.commentsWidget in
+      let (cwidg, ccmd) = Widgets.Comments.update cmsg model.commentsWidget in
         {model|commentsWidget = cwidg}![Cmd.map CommentsMsg ccmd]

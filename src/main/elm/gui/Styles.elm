@@ -23,7 +23,7 @@ type Styles
   | Refresh
   | StoryItem
   | StoryItemHeader
-  | Comment
+  | CommentStyle
   | CommentBubble
   | StoryItemTitle
 
@@ -83,6 +83,6 @@ appstyles =
     , style StoryItem[Border.bottom 1]
     , style StoryItemHeader[Font.size 13, Style.Color.text Color.lightCharcoal]
     , style StoryItemTitle[Font.size 18, Style.Color.text Color.black]
-    , style Comment[Font.size 15, Style.cursor "pointer"]
+    , style CommentStyle[Font.size 15, Style.cursor "pointer"]
     , style CommentBubble[Font.size 18, Style.Color.text Color.black]
     ]

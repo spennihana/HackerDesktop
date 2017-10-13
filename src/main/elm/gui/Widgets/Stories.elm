@@ -229,7 +229,7 @@ storyItem item curtime
           [ column None[alignBottom, width <| percent 80][row StoryItemHeader[][text <| (toString item.score) ++ " | " ++ urlScrape item.url]]
           , column None[width fill, height fill]
               [row None[alignRight, moveLeft 10, onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed NoOp)]
-                  [ row Comment[onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed (ShowComments item))]
+                  [ row CommentStyle[onWithOptions "click" Utils.Utils.clickOptionsTF (JDecode.succeed (ShowComments item))]
                     [ el CommentBubble
                       [height <| px 30, width <| px 30
                       ](node "i" <| el None [class "fa fa-comments", center, verticalCenter] empty)

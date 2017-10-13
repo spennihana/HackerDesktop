@@ -52,7 +52,7 @@ type alias ResponseList
     }
 decodeComment: JDecode.Decoder ResponseList
 decodeComment
-  = decode Comment
+  = decode ResponseList
     |> required "parent" JDecode.int
     |> required "depth" JDecode.int
     |> required "comments" (JDecode.list decodeItem)
