@@ -1,47 +1,34 @@
 package com.hnd
 
+import com.firebase.client.DataSnapshot
+import com.firebase.client.Firebase
+import com.firebase.client.ValueEventListener
 import com.google.gson.Gson
-import com.hnd.util.Log
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
+import java.util.concurrent.Semaphore
 
 
-object HN {
+object FireNews {
   val HN_API_VERSION = "v0"
   val HN_URL = "https://hacker-news.firebaseio.com/$HN_API_VERSION"
-  val STORIES= "stories.json"
+  val hnref = Firebase(HN_URL)
 
-  // item
-  fun item(item: Int):String { return "$HN_URL/item/$item.json"}
+  fun item(item: Int):String { return "item/$item" }
+  fun story(s: String):String{ return "${s}stories"}
 
-  // stories
-  fun storiesURL(story:String):String { return "$HN_URL/$story$STORIES"}
-
-  // updates
-  fun updates():String { return "$HN_URL/updates.json"}
-
-  fun hnRequest(url: String): String {
-    Log.info("Making HN request with url: " + url)
-    val hn = URL(url)
-    with(hn.openConnection() as HttpURLConnection) {
-      Log.info("Response: $responseCode")
-      BufferedReader(InputStreamReader(inputStream)).use {
-        val res = StringBuffer()
-        var line = it.readLine()
-        var i =0
-        while( line!=null ) {
-          res.append(line)
-          line = it.readLine()
-          i++
-          if( i%1000 ==0 )
-            Log.info("Got i: " + i)
-        }
-        return res.toString()
+  fun hnRequest(path: String): String {
+    var s: String = ""
+    val sem = Semaphore(0) // hack to do synchronous firebase calls
+    hnref.child(path).addListenerForSingleValueEvent(object: ValueEventListener {
+      override fun onDataChange(snap: DataSnapshot) {
+        s = Gson().toJson(snap.value)
+        sem.release()
       }
-    }
+      override fun onCancelled(){}
+    })
+    sem.acquire()
+    return s
   }
+
 }
 
 data class Item(val item:String, var sort:Int)
@@ -54,7 +41,7 @@ class StoryCache(val story:String) {
   val _comments: MutableMap<Int,Array<Comment?>> = mutableMapOf()
   val _depthMap: MutableMap<Int, Int> = mutableMapOf() // know depth of parent
   fun fetchAll() {
-    val res = HN.hnRequest(HN.storiesURL(story))
+    val res = FireNews.hnRequest(FireNews.story(story))
     _ids = Gson().fromJson(res, IntArray::class.java)
     if( _ids==null )
       throw IllegalStateException("Unable to fetch $story stories")
@@ -79,6 +66,8 @@ class StoryCache(val story:String) {
       return null
     if( start + cnt > index.size )
       cnt = index.size - start
+
+    if( cnt==0 ) return null
 
     val res = IntArray(cnt)
     var i = 0
@@ -106,7 +95,7 @@ class StoryCache(val story:String) {
       var i=0
       val depth = if(_depthMap[pid]==null ) 0 else (1+_depthMap[pid]!!)
       for(id in cids) {
-        kids[i++] = Comment(HN.hnRequest(HN.item(id)), depth, null)
+        kids[i++] = Comment(FireNews.hnRequest(FireNews.item(id)), depth, null)
         _comments[id] = emptyArray() // flag the next level as empty array
         _depthMap[id] = depth
       }
@@ -129,7 +118,7 @@ class StoryCache(val story:String) {
     val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return ""
     val sb: StringBuilder = StringBuilder("[")
     for(id in ids) {
-      if( _cache[id]==null) _cache[id] = HN.hnRequest(HN.item(id))
+      if( _cache[id]==null) _cache[id] = FireNews.hnRequest(FireNews.item(id))
       sb.append(_cache[id]).append(",")
     }
     sb.deleteCharAt(sb.lastIndex).append("]")

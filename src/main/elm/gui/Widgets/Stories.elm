@@ -210,7 +210,8 @@ items swidg
       , on "scroll" (JDecode.map OnScroll JDecode.value)
       ]
       [ column None [height <| px 40, width fill]
-          <| List.map (\s -> storyItem s swidg.widget.curtime) swidg.widget.stories
+          <| (List.filter (\s -> not s.deleted) swidg.widget.stories
+              |> List.map (\s -> storyItem s swidg.widget.curtime) )
       ]
 
 storyItem: Item -> Int -> Element Styles v Msg

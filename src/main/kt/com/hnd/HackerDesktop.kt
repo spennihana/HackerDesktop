@@ -34,6 +34,8 @@ class HackerDesktop(val port: Int, userDataPath: String) {
     Log.info("==========Hacker Desktop==========")
     Log.info("Internal server started at: " + _endpoint)
     Log.info("Log directory: " + _userData)
+    Log.info("Firebase: " + FireNews.hnref)
     initStories()
+    Log.info("booted")
   }
 }

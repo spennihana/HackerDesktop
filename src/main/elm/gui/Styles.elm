@@ -28,6 +28,7 @@ type Styles
   | CommentStyle
   | CommentBubble
   | StoryItemTitle
+  | ShowCommentsStyle
 
 type SidebarButtonStyles
   = Selected
@@ -94,4 +95,5 @@ appstyles =
     , style CommentBubbleWrapper[Font.size 15, Style.cursor "pointer"]
     , style CommentBubble[Font.size 18, Style.Color.text Color.black]
     , style CommentStyle[Border.bottom 1]
+    , style ShowCommentsStyle [Font.size 18, Style.Color.background Color.lightGray]
     ]

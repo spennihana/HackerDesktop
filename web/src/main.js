@@ -28,6 +28,7 @@ var Log = new (winston.Logger)({
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 let hndProc = null;
+var booted=false;
 
 const startHNDesktopKt = () => {
   let java = path.join(__dirname, 'resources', 'jre', 'Contents', 'Home', 'bin', 'java')
@@ -39,6 +40,17 @@ const startHNDesktopKt = () => {
   Log.info("java: " + java)
   Log.info("args: " + args)
   hndProc = require('child_process').spawn(java, args)
+  hndProc.stdout.on('data', (data) => {
+    var d = data.toString();
+    if( d.indexOf("booted")!=-1 ) {
+      booted=true
+      Log.info("hnd.jar successfully started.")
+    }
+  });
+
+  hndProc.stderr.on('data', (data) => {
+    Log.info("ERROR: " + data.toString())
+  });
 }
 
 const killHackerDesktopProc = () => {
@@ -50,12 +62,7 @@ const killHackerDesktopProc = () => {
 }
 
 app.on('will-quit', killHackerDesktopProc)
-app.on('ready', startHNDesktopKt)
-ipcMain.on('bootHND', (event, arg) => {
-  if( hndProc==null )
-    startHNDesktopKt();
-})
-
+app.on('ready', startHNDesktopKt);
 
 const createWindow = () => {
   // Create the browser window.
@@ -66,8 +73,8 @@ const createWindow = () => {
     minHeight: 600,
     titleBarStyle: 'hidden',
     webPreferences: {
-        nativeWindowOpen: true
-      }
+      nativeWindowOpen: true
+    }
   });
 
   mainWindow.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
@@ -77,6 +84,11 @@ const createWindow = () => {
       titleBarStyle: 'show'
     })
   })
+
+  if( !booted ) {
+    Log.info("booting...")
+    setTimeout(function() {}, 1000);
+  }
 
   // and load the index.html of the app.
   mainWindow.loadURL(`file://${__dirname}/index.html`);

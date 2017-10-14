@@ -19,8 +19,11 @@ update msg model =
     StoriesMsg smsg ->
       case smsg of
       Widgets.Stories.ShowComments item ->  -- pass msg from the stories widget to the comments widget
-        let (newmodel, _) = update (CommentsMsg (Widgets.Comments.ClearComments)) model in
-        update (CommentsMsg (Widgets.Comments.GetComments (Widgets.Stories.type2Str model.storyWidget) item)) newmodel
+        case List.length item.kids of
+        0 -> model![] -- no comments, so don't do anything
+        _ ->
+          let (newmodel, _) = update (CommentsMsg (Widgets.Comments.ClearComments)) model in
+          update (CommentsMsg (Widgets.Comments.GetComments (Widgets.Stories.type2Str model.storyWidget) item)) newmodel
 
       Widgets.Stories.ChangeStory _ ->
         let (swidg, scmd) = Widgets.Stories.update smsg model.storyWidget

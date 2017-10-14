@@ -35,15 +35,15 @@ class RequestServer(val port: Int) {
     })
     Spark.before(Filter { _, res ->
       res.header("Access-Control-Allow-Origin", "*")
-      res.header("Access-Control-Request-Method", "GET")
-      res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,")
+      res.header("Access-Control-Request-Method", "GET,POST")
+      res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin")
       res.type("application/json")
     })
 
     // custom routes
     registeRoute("/stories/:story/:n", ::getStories)
-    registeRoute("/reset/", ::reset)
-    Spark.post("/comments/", {req,res -> genericHandler(req,res,::getComments)})
+    registeRoute("/reset", ::reset)
+    Spark.post("/comments", {req,res -> genericHandler(req,res,::getComments)})
   }
 }
 data class GetComments(val story:String, val pid:Int, val cids:String)

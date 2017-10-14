@@ -25,7 +25,7 @@ import Html.Attributes
 -- user imports
 import Styles exposing (Styles(..))
 import Utils.Decoders exposing (Item, decodeComment, ResponseList)
-import Utils.Utils
+import Utils.Utils exposing (humanTime)
 
 import Debug exposing (log)
 
@@ -122,7 +122,7 @@ makeComment depth item
 
 getComments: String -> Item -> Cmd Msg
 getComments type_ s
-  = let url = "http://localhost:3984/comments/"
+  = let url = "http://localhost:3984/comments"
         obj = JEncode.object
               [ ("story", JEncode.string <| String.toLower type_)
               , ("pid", JEncode.string <| toString s.id)
@@ -161,14 +161,24 @@ comments cwidg
       column None
         [ width fill
         , height fill
-        , yScrollbar
-        ]([header cwidg] ++ (showComments cwidg.curtime r))
+        ][header cwidg, commentsHelper cwidg.curtime r]
+
+commentsHelper: Int -> List Comment -> Element Styles v Msg
+commentsHelper curtime r
+  = column None
+      [ width fill
+      , height fill
+      , yScrollbar
+      ](showComments curtime r)
 
 showComments: Int -> List Comment -> List (Element Styles v Msg)
 showComments curtime comments
   = case comments of
     [] -> []
-    x::xs -> (commentView curtime x)::(showComments curtime xs)
+    x::xs ->
+      case x.item.deleted of
+      True -> showComments curtime xs  -- don't show deleted comments
+      False -> (commentView curtime x)::(showComments curtime xs)
 
 embedHtml: String -> Element Styles v Msg
 embedHtml htmlStr
@@ -179,4 +189,49 @@ commentView curtime comment
   = column CommentStyle
       [ width fill
       , paddingXY 10 0
-      ][ row None[moveRight (toFloat <| comment.depth*10)][embedHtml comment.item.text] ]
+      ][ row None[width fill, spacing 20]
+          [ column ShowCommentsStyle[width <| px 20, height fill, center, verticalCenter](commentShowBtn comment)
+          , column None
+              [width fill, moveRight (toFloat <| comment.depth*10)]
+              [ row StoryItemHeader[][text comment.item.by, text " | ", text <| humanTime (toFloat<| curtime - comment.item.time)]
+              , row None[][embedHtml comment.item.text]
+              , row None[alignRight][text <| (toString (cntResponses comment)) ++ " responses"]
+              ]
+          ]
+       ]
+
+cntResponses: Comment -> Int
+cntResponses c
+  = List.length c.item.kids
+
+commentShowBtn: Comment -> List (Element Styles v Msg)
+commentShowBtn c
+  = case c.kids of
+    Nothing ->
+      case c.item.kids of
+      [] -> [empty]
+      _ ->
+        [ row None[spacing 2]
+            [ column None [center, verticalCenter][(text <| toString <| List.length c.item.kids)]
+            , (node "i" <| el None [class "fa fa-angle-right"] empty)
+            ]
+        ]
+
+    Just r ->
+      case r of
+      Responses kids ->
+        case List.length kids of
+        0 ->
+          [empty]
+
+        _ ->
+          [ el None []
+             (node "i" <| el None [class (getArrowType c)] empty)
+          , el None [](text <| toString <| List.length kids)
+          ]
+
+getArrowType:Comment -> String
+getArrowType c
+  = case c.shown of
+    True -> "fa fa-angle-down"
+    False -> "fa fa-angle-right"
