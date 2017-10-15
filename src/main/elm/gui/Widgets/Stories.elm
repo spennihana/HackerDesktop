@@ -211,21 +211,18 @@ items swidg
       ]
       [ column None [height <| px 40, width fill]
           <| (List.filter (\s -> not s.deleted) swidg.widget.stories
-              |> List.map (\s -> storyItem s swidg.widget.curtime) )
+              |> List.map (\s -> storyItem (type2Str swidg) s swidg.widget.curtime) )
       ]
 
-storyItem: Item -> Int -> Element Styles v Msg
-storyItem item curtime
+storyItem: String -> Item -> Int -> Element Styles v Msg
+storyItem type_ item curtime
   = column StoryItem
       [ height <| px 80
       , width fill
       , spacing 8
       ][ row StoryItemHeader[][text item.by, text " | ", text <| humanTime (toFloat<| curtime - item.time)]
        , row StoryItemTitle[height <| px 20, xScrollbar]
-          [newTab item.url
-            <| html
-            <| Html.div[Html.Attributes.style[("width", "100%"), ("white-space", "nowrap"), ("overflow-y", "hidden"), ("overflow-x", "scroll")]] -- FIXME: hack to get horizontal text scroll
-                       [Html.text item.title]]
+          [theItem type_ item]
        , row None[height <| px 30]
           [ column None[alignBottom, width <| percent 80][row StoryItemHeader[][text <| (toString item.score) ++ " | " ++ urlScrape item.url]]
           , column None[width fill, height fill]
@@ -240,6 +237,27 @@ storyItem item curtime
               ]
           ]
        ]
+
+theItem: String -> Item -> Element Styles v Msg
+theItem type_ item
+  = let
+      htmlBlob
+        = html <|
+            Html.div -- FIXME: hack to get horizontal text scroll
+             [ Html.Attributes.style
+                 [ ("width", "100%")
+                 , ("white-space", "nowrap")
+                 , ("overflow-y", "hidden")
+                 , ("overflow-x", "scroll")
+                 ]
+             ][Html.text item.title]
+    in
+    case type_ of
+    "Ask" ->
+      el AskStory[onClick <| ShowComments item](htmlBlob)
+
+    _ ->
+      newTab item.url htmlBlob
 
 dragger: StoriesWidget -> Element Styles v Widgets.ResizeableWidget.Msg
 dragger swidg

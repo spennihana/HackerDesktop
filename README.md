@@ -30,3 +30,9 @@ The output will be in the /dist directory
 
 
 ### HackerDesktop in Action
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/oQSy3SlsaHI?ecver=1" frameborder="0" allowfullscreen></iframe>
+
+
+### Link to downloadable DMG (my dropbox)
+https://www.dropbox.com/s/pzoeskdk2d04r6t/HackerDesktop.dmg?dl=0

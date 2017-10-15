@@ -34,6 +34,9 @@ object FireNews {
 data class Item(val item:String, var sort:Int)
 data class Comment(val comment: String?, var depth:Int, val kids: Array<Comment?>?)
 class StoryCache(val story:String) {
+  companion object {
+    val NULL = Gson().toJson(null)
+  }
   init { fetchAll() }
   var _ids: IntArray? = null
   var _fetchedSoFar:Int = 0
@@ -88,7 +91,7 @@ class StoryCache(val story:String) {
   //      if there are no kids, then fetch kids
   //    return kids
   fun getComments(pid:Int, cids:IntArray?):String {
-    if( cids==null || cids.isEmpty() ) return ""
+    if( cids==null || cids.isEmpty() ) return NULL
     if( _comments[pid]==null || _comments[pid]!!.isEmpty() ) { // only occurs if pid is a story id
       assert(_cache[pid]!=null)  // assert pid is a story id
       val kids = arrayOfNulls<Comment>(cids.size)
@@ -102,7 +105,7 @@ class StoryCache(val story:String) {
       _comments[pid] = kids
     }
     val sb = StringBuilder("[")
-    val comments = _comments[pid] ?: return ""
+    val comments = _comments[pid] ?: return NULL
     for(comment in comments)
       sb.append(comment?.comment).append(",")
     sb.deleteCharAt(sb.lastIndex).append("]")
@@ -115,7 +118,7 @@ class StoryCache(val story:String) {
   }
 
   fun loadMore(nToFetch:Int):String {
-    val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return ""
+    val ids = range(_ids, _fetchedSoFar, nToFetch) ?: return NULL
     val sb: StringBuilder = StringBuilder("[")
     for(id in ids) {
       if( _cache[id]==null) _cache[id] = FireNews.hnRequest(FireNews.item(id))

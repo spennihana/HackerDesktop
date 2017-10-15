@@ -29,6 +29,9 @@ type Styles
   | CommentBubble
   | StoryItemTitle
   | ShowCommentsStyle
+  | ResponseCount
+  | AskTxt
+  | AskStory
 
 type SidebarButtonStyles
   = Selected
@@ -75,6 +78,8 @@ appstyles =
         , Border.bottom 1
         , Style.Color.border Color.lightGray
         ]
+    , style AskStory[Style.cursor "pointer"]
+    , style AskTxt [ Font.size 15, Style.Color.text Color.charcoal, Style.Color.background <| Color.rgb 246 246 239]
     , style Sidebar [ Style.prop "-webkit-user-select" "none"
                     , Style.Color.background <| Color.rgb 255 112 23
                     ]
@@ -95,5 +100,6 @@ appstyles =
     , style CommentBubbleWrapper[Font.size 15, Style.cursor "pointer"]
     , style CommentBubble[Font.size 18, Style.Color.text Color.black]
     , style CommentStyle[Border.bottom 1]
-    , style ShowCommentsStyle [Font.size 18, Style.Color.background Color.lightGray]
+    , style ShowCommentsStyle [Font.size 18, Style.Color.background Color.lightGray, Style.cursor "pointer"]
+    , style ResponseCount [Font.size 15, Style.Color.background Color.lightGray]
     ]

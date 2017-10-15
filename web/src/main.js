@@ -61,6 +61,10 @@ const killHackerDesktopProc = () => {
   }
 }
 
+ipcMain.on('boot', (event, arg) => {
+  event.returnValue = booted;
+})
+
 app.on('will-quit', killHackerDesktopProc)
 app.on('ready', startHNDesktopKt);
 
@@ -85,16 +89,11 @@ const createWindow = () => {
     })
   })
 
-  if( !booted ) {
-    Log.info("booting...")
-    setTimeout(function() {}, 1000);
-  }
-
   // and load the index.html of the app.
   mainWindow.loadURL(`file://${__dirname}/index.html`);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+//  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
