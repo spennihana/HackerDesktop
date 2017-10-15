@@ -32,7 +32,7 @@ The output will be in the /dist directory
 
 ### HackerDesktop in Action
 
-[![](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/embed/oQSy3SlsaHI?ecver=1)
+[![](https://i.ytimg.com/vi/oQSy3SlsaHI/2.jpg?time=1508029580636)](https://www.youtube.com/embed/oQSy3SlsaHI?ecver=1)
 
 ### Link to downloadable DMG (my dropbox)
 https://www.dropbox.com/s/pzoeskdk2d04r6t/HackerDesktop.dmg?dl=0
